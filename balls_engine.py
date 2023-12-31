@@ -15,54 +15,66 @@ class Ball:
         self.dy = dy
         self.size = size
         self.fix = fix
-        self.have_colide = False
+        self.mass = mass
+        self.forces = []
 
     def apply_force(self, fx, fy, dt):
         if self.fix:
             return
-        self.dx += fx * dt
-        self.dy += fy * dt
+        self.forces.append((fx, fy, dt))
 
     def update(self, dt):
         if self.fix:
             return
+        for fx, fy, fdt in self.forces:
+            self.dx += fx * fdt
+            self.dy += fy * fdt
+        self.forces = []
+
         self.x += self.dx * dt
         self.y += self.dy * dt
-        self.have_colide = False
 
     def is_coliding(self, other):
         return ((self.dst(other) > abs(self.size + other.size)) ^ \
-                (self.size * other.size > 0)) and not self.have_colide
+                (self.size * other.size > 0))
 
     def dst(self, other):
         return math.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
 
-    def apply_bounce(self, other):
+    def apply_bounce(self, other, friction=1):
         dst = self.dst(other)
         invert = -1 if self.size * other.size < 0 else 1
         nx = (self.x - other.x) / dst * invert
         ny = (self.y - other.y) / dst * invert
         limite_dist = abs(self.size + other.size)
-        # self.x += nx * (limite_dist - dst) * invert
-        # self.y += ny * (limite_dist - dst) * invert
-        product = self.dx * nx + self.dy * ny
-        wx = self.dx - product * nx
-        wy = self.dy - product * ny
-        self.dx = wx - product * nx
-        self.dy = wy - product * ny
-        self.have_colide = True
+        self.x += nx * (limite_dist - dst) * invert
+        self.y += ny * (limite_dist - dst) * invert
+
+        self_factor = (self.mass - other.mass) / (self.mass + other.mass)
+        other_factor = (2 * other.mass) / (self.mass + other.mass)
+        if other.fix or math.isinf(other.mass):
+            self_factor = -1
+            other_factor = 2
+        dx = self_factor * self.dx + other_factor * other.dx
+        dy = self_factor * self.dy + other_factor * other.dy
+        dx *= friction
+        dy *= friction
+        self.apply_force(dx - self.dx, dy - self.dy, 1)
         # self.dx *= 1.01
         # self.dy *= 1.01
         # self.size *= 1.05
 
-
+def calculate_energie(balls):
+    result = 0
+    for ball in balls:
+        result += ball.mass * (ball.dx * ball.dx + ball.dy * ball.dy) / 2
+    return result
 
 def mainloop():
-
     X = RADIUS * 2
     Y = RADIUS * 2
     balls = [Ball(x = 0.1, y =  i * -0.1, size = 0.05, dx=1) for i in range(10)]
-    balls = [Ball(size=0.3), Ball(x=-0.7, dx=0.5, size=0.1)]
+    balls = [Ball(size=0.3, mass=2), Ball(x=-0.7, dx=0.5, dy=0.1, size=0.1, mass=1)]
     border = Ball(x = 0, y = 0, size = -1, fix = True)
 
     last_frame = time.time()
@@ -72,16 +84,16 @@ def mainloop():
         last_frame += delta_time
         for i, ball in enumerate(balls):
             # ball.apply_force(math.cos(last_frame), math.sin(last_frame), delta_time)
-            ball.update(delta_time)
+            # ball.apply_force(0, 1, delta_time)
             if ball.is_coliding(border):
                 ball.apply_bounce(border)
             for other in balls[i + 1:]:
                 if ball.is_coliding(other):
-                    ball.apply_bounce(other)
-                    other.apply_bounce(ball)
-                    print("Ball colide")
-        
+                    ball.apply_bounce(other, friction=1.1)
+                    other.apply_bounce(ball, friction=1.1)
 
+        for ball in balls:
+            ball.update(delta_time)
 
         if not g.delay_jfps(60):
             continue
@@ -102,6 +114,7 @@ def mainloop():
         g.set_fill_color(g.Color.WHITE)
         for ball in balls:
             g.draw_ellipse(RADIUS * (ball.x + 1), RADIUS * (ball.y + 1), ball.size * RADIUS, ball.size * RADIUS)
+        print(calculate_energie(balls))
 
 
 def main():
