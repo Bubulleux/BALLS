@@ -1,4 +1,3 @@
-
 import easygraphics as g
 import math
 import time
@@ -50,13 +49,16 @@ class Ball:
         self.x += nx * (limite_dist - dst) * invert
         self.y += ny * (limite_dist - dst) * invert
 
-        self_factor = (self.mass - other.mass) / (self.mass + other.mass)
-        other_factor = (2 * other.mass) / (self.mass + other.mass)
+        mass_factor = (2 * other.mass) / (self.mass + other.mass)
         if other.fix or math.isinf(other.mass):
-            self_factor = -1
-            other_factor = 2
-        dx = self_factor * self.dx + other_factor * other.dx
-        dy = self_factor * self.dy + other_factor * other.dy
+            mass_factor = 2
+        dst_square = self.dst(other) ** 2
+        dot_product = (self.dx - other.dx) * (self.x - other.x) + \
+            (self.dy - other.dy) * (self.y - other.y)
+        factor = mass_factor * dot_product / dst_square
+        dx = self.dx - factor * (self.x - other.x)
+        dy = self.dy - factor * (self.y - other.y)
+
         dx *= friction
         dy *= friction
         self.apply_force(dx - self.dx, dy - self.dy, 1)
@@ -64,45 +66,41 @@ class Ball:
         # self.dy *= 1.01
         # self.size *= 1.05
 
+
 def calculate_energie(balls):
     result = 0
     for ball in balls:
         result += ball.mass * (ball.dx * ball.dx + ball.dy * ball.dy) / 2
     return result
 
+
 def mainloop():
     X = RADIUS * 2
     Y = RADIUS * 2
     balls = [Ball(x = 0.1, y =  i * -0.1, size = 0.05, dx=1) for i in range(10)]
-    balls = [Ball(size=0.3, mass=2), Ball(x=-0.7, dx=0.5, dy=0.1, size=0.1, mass=1)]
+    # balls = [Ball(size=0.3, mass=2), Ball(x=-0.7, dx=0.5, dy=0.1, size=0.1, mass=1)]
     border = Ball(x = 0, y = 0, size = -1, fix = True)
 
     last_frame = time.time()
+    frame = 0
+    # g.set_background_color("black")
 
     while g.is_run():
         delta_time = time.time() - last_frame
+        delta_time = 1 / 60
         last_frame += delta_time
-        for i, ball in enumerate(balls):
-            # ball.apply_force(math.cos(last_frame), math.sin(last_frame), delta_time)
-            # ball.apply_force(0, 1, delta_time)
-            if ball.is_coliding(border):
-                ball.apply_bounce(border)
-            for other in balls[i + 1:]:
-                if ball.is_coliding(other):
-                    ball.apply_bounce(other, friction=1.1)
-                    other.apply_bounce(ball, friction=1.1)
 
-        for ball in balls:
-            ball.update(delta_time)
-
-        if not g.delay_jfps(60):
-            continue
         # g.clear_device()
+        # if not g.delay_jfps(60):
+        #     continue
 
-        g.clear()
-        g.set_fill_color(g.Color.BLACK)
-        g.fill_polygon(0, 0, X, 0, X, Y, 0, Y)
-        g.draw_polygon(50, 50, 350, 250, 50, 150)
+        g.clear_device()
+        img = g.create_image(RADIUS * 2, RADIUS * 2)
+        g.set_background_color(g.Color.BLACK)
+        g.set_target(img)
+        # g.set_fill_color(g.Color.BLACK)
+        # g.fill_polygon(0, 0, X, 0, X, Y, 0, Y)
+        # g.draw_polygon(50, 50, 350, 250, 50, 150)
 
         g.set_color(g.Color.BLACK)
         g.set_fill_color(g.Color.WHITE)
@@ -114,7 +112,13 @@ def mainloop():
         g.set_fill_color(g.Color.WHITE)
         for ball in balls:
             g.draw_ellipse(RADIUS * (ball.x + 1), RADIUS * (ball.y + 1), ball.size * RADIUS, ball.size * RADIUS)
-        print(calculate_energie(balls))
+        g.save_image(f"./result/{frame}.png")
+        g.set_target()
+        g.draw_image(0, 0, img)
+        img.close()
+        frame += 1
+        print(1 / delta_time)
+        g.delay_fps(60)
 
 
 def main():
@@ -124,4 +128,5 @@ def main():
     g.close_graph()
 
 
-g.easy_run(main)
+if __name__ == "__main__":
+    g.easy_run(main)
