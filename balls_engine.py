@@ -86,9 +86,6 @@ def mainloop():
     # g.set_background_color("black")
 
     while g.is_run():
-        delta_time = time.time() - last_frame
-        delta_time = 1 / 60
-        last_frame += delta_time
 
         # g.clear_device()
         # if not g.delay_jfps(60):
@@ -102,23 +99,12 @@ def mainloop():
         # g.fill_polygon(0, 0, X, 0, X, Y, 0, Y)
         # g.draw_polygon(50, 50, 350, 250, 50, 150)
 
-        g.set_color(g.Color.BLACK)
-        g.set_fill_color(g.Color.WHITE)
-
-
-        g.draw_ellipse(RADIUS, RADIUS, RADIUS, RADIUS)
-
-        g.set_color(g.Color.BLACK)
-        g.set_fill_color(g.Color.WHITE)
-        for ball in balls:
-            g.draw_ellipse(RADIUS * (ball.x + 1), RADIUS * (ball.y + 1), ball.size * RADIUS, ball.size * RADIUS)
         g.save_image(f"./result/{frame}.png")
         g.set_target()
         g.draw_image(0, 0, img)
         img.close()
         frame += 1
         print(1 / delta_time)
-        g.delay_fps(60)
 
 
 def main():
