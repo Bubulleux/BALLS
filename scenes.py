@@ -17,13 +17,16 @@ class Scene(ABC):
 
 
 class BallsScene(Scene):
-    def __init__(self, balls_generator, gravity, friction=1):
+    def __init__(self, balls_generator, gravity, friction=1, on_colide=None, 
+                 finish_check=None):
         self.generator = balls_generator
         self.balls = []
         self.gavity = gravity
         self.friction = friction
         self.colisions = []
         self.time = 0
+        self.finish_check = finish_check or (lambda _: False)
+        self.on_colide = on_colide or (lambda _: None)
         super().__init__()
 
     def update(self, dt):
@@ -36,6 +39,8 @@ class BallsScene(Scene):
                 if ball.is_coliding(other):
                     ball.apply_bounce(other, friction=self.friction)
                     other.apply_bounce(ball, friction=self.friction)
+                    self.on_colide(ball, other)
+                    self.on_colide(other, ball)
                     self.colisions.append(self.time)
 
         for ball in self.balls:
@@ -43,6 +48,10 @@ class BallsScene(Scene):
 
     def reset(self):
         self.balls = self.generator()
+        self.colisions = []
+        self.time = 0
 
     def is_finish(self):
-        return False
+        return self.finish_check(self)
+
+

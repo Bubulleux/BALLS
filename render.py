@@ -14,13 +14,15 @@ def init(width, height, main_loop, window_size):
 def renderBallsSenes(scene: scenes.BallsScene):
     g.clear()
     balls = scene.balls
+    g.set_line_width(5)
+    g.set_background_color(g.Color.BLACK)
     g.set_color(g.Color.BLACK)
     g.set_fill_color(g.Color.WHITE)
 
     g.set_color(g.Color.BLACK)
     g.set_fill_color(g.Color.WHITE)
     for ball in balls:
-        g.circle(ball.x, ball.y, ball.size)
+        g.draw_ellipse(ball.x, ball.y, ball.size, ball.size)
     g.delay_fps(FPS)
 
 
@@ -30,5 +32,10 @@ def saveFrame(file_name):
 
 def is_runing():
     return g.is_run()
+
+class Render:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
 
 

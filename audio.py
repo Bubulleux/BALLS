@@ -14,8 +14,8 @@ def generate_audio(audio_trame, duration, file_name):
 
     for time, cur_audio in audio_trame:
         start_frame = int(SAMPLE_RATE * time)
-        max_frame =  max(len(cur_audio), len(audio) - start_frame)
-        for i, value in enumerate(cur_audio[:max_frame]):
+        frame_count =  min(len(cur_audio), len(audio) - start_frame)
+        for i, value in enumerate(cur_audio[:frame_count]):
             audio[i + start_frame] += value
     with wave.open(file_name, "w") as f:
         _save_file(audio, f)
@@ -25,7 +25,7 @@ def _save_file(audio, file: wave.Wave_write):
     # Channel count, Sample width, Sample Rate, Sample Count, Compression
     file.setparams((1, 2, SAMPLE_RATE, len(audio), "NONE", "not compressed"))
     for sample in audio:
-        file.writeframes(struct.pack('h', int(sample * 32767.0)))
+        file.writeframes(struct.pack('h', int(max(min(sample, 1), -1) * 32767.0)))
 
 
 def generate_sin_kick(frequency, start_frequenc, attack, release, start_volume=0.8, end_volume=0):

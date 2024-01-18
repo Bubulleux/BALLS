@@ -15,7 +15,6 @@ def mainloop():
 
     g.set_fill_color(g.Color.BLACK)
     c = g.get_fill_color()
-    print(c.getRgb())
     g.fill_polygon(0, 0, X, 0, X, Y, 0, Y)
     g.draw_polygon(50, 50, 350, 250, 50, 150)
 
@@ -50,10 +49,6 @@ def mainloop():
             dx *= 1.1
             dy *= 1.1
             size *= 1.1
-            print(product)
-            print(x, y)
-            print(dx, dy)
-            print("colide")
 
         if not g.delay_jfps(60):
             continue

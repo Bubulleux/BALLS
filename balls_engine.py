@@ -41,6 +41,8 @@ class Ball:
         return math.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
 
     def apply_bounce(self, other, friction=1):
+        if self.fix:
+            return
         dst = self.dst(other)
         invert = -1 if self.size * other.size < 0 else 1
         nx = (self.x - other.x) / dst * invert
@@ -104,7 +106,6 @@ def mainloop():
         g.draw_image(0, 0, img)
         img.close()
         frame += 1
-        print(1 / delta_time)
 
 
 def main():
