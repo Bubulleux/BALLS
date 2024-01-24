@@ -1,5 +1,6 @@
 from balls_engine import Ball
 from abc import ABC
+from render import COLORS, Render
 
 
 class Scene(ABC):
@@ -15,9 +16,12 @@ class Scene(ABC):
     def is_finish(self):
         ...
 
+    def render(self, renderer: Render):
+        ...
+
 
 class BallsScene(Scene):
-    def __init__(self, balls_generator, gravity, friction=1, on_colide=None, 
+    def __init__(self, balls_generator, gravity, friction=1, on_colide=None,
                  finish_check=None):
         self.generator = balls_generator
         self.balls = []
@@ -54,4 +58,11 @@ class BallsScene(Scene):
     def is_finish(self):
         return self.finish_check(self)
 
+    def render(self, render: Render):
+        render.clear()
+        render.set_bg_color(COLORS.BLACK)
+        #render.render_circle(0, 0, 1)
 
+        for ball in self.balls:
+            render.render_circle(ball.x, ball.y, ball.size)
+        render.wait_next_frame()

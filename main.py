@@ -1,6 +1,6 @@
 from datetime import datetime
 import balls_engine
-import render
+from render import Render, COLORS
 import audio
 import scenes
 import random
@@ -9,7 +9,6 @@ import os
 
 FPS = 60
 VIDEO_COUNT = 10
-render.FPS = FPS
 
 RESULT_HEIGHT = 1920
 RESULT_WIDTH = 1080
@@ -35,6 +34,7 @@ def is_finish(scene: scenes.Scene):
             return True
     return False
 
+
 def saveMovie(scene: scenes.BallsScene, duration):
     os.system("rm audio.wav")
     sound = audio.generate_sin_kick(300, 500, 0.05, 0.1)
@@ -50,21 +50,20 @@ def saveMovie(scene: scenes.BallsScene, duration):
     os.system("rm result/*")
 
 
-
-def main():
+def main(render: Render):
     scene = scenes.BallsScene(balls_generator, (2, 0),
                               on_colide=on_colide, finish_check=is_finish)
 
     last_frame = time.time()
     frame = 0
     video_count = 0
-    while render.is_runing():
+    while render.is_running():
         delta_time = time.time() - last_frame
         delta_time = 1 / FPS
         last_frame += delta_time
         scene.update(delta_time)
-        render.renderBallsSenes(scene)
-        render.saveFrame(f"result/{frame}.png")
+        scene.render(render)
+        render.save_frame(f"result/{frame}.png")
         frame += 1
         if scene.is_finish():
             saveMovie(scene, frame / FPS)
@@ -77,7 +76,5 @@ def main():
 
 
 if __name__ == "__main__":
-    y_offset = (RESULT_HEIGHT - RESULT_WIDTH) / RESULT_WIDTH / 2
-    print(y_offset)
-    # render.init(int(RESULT_WIDTH * RENDER_SCALE), int(RESULT_HEIGHT * RENDER_SCALE), main, (-1, -1 - y_offset, 2, 2 + 2 * y_offset))
-    render.init(int(RESULT_WIDTH * RENDER_SCALE), int(RESULT_WIDTH * RENDER_SCALE), main, (-1, -1, 2, 2))
+    render = Render(RESULT_WIDTH * RENDER_SCALE, RESULT_HEIGHT * RENDER_SCALE)
+    render.run(main)
